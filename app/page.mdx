@@ -1,8 +1,6 @@
-# Code Hike v1 starter
 
-For more information, check out [Code Hike docs](https://codehike.org/docs).
 
-Codeblock example (from `./mdx-components.tsx`):
+
 
 ```js
 const lorem = ipsum(dolor, sit)
@@ -15,6 +13,34 @@ lorem.adipiscing((sed, elit) => {
 })
 ```
 
-Layout examples:
 
-- [/app/scrollycoding](/scrollycoding)
+```js
+function lorem(ipsum, dolor = 1) {
+  // !className line-through
+  const sit = ipsum == null ? 0 : ipsum.sit
+  dolor = sit - amet(dolor)
+  // !className[/sit/] bg-red-700 rounded-lg px-1
+  return sit ? consectetur(ipsum) : []
+}
+```
+
+
+<HoverContainer>
+
+The [base case](hover:one) returns 1.
+
+```cpp
+int factorial(int n) {
+  if (n == 0) {
+    // !hover one
+    return 1;
+  } else {
+    // !hover two
+    return n * factorial(n - 1);
+  }
+}
+```
+
+The [recursive case](hover:two) multiplies something.
+
+</HoverContainer>
