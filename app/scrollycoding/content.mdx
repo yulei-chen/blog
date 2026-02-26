@@ -1,186 +1,138 @@
-## !intro Scrollycoding Example
+## !intro Visualize Your Audio
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer lectus elit, tincidunt consectetur auctor ac, dignissim eget dolor. Integer magna ante, dictum ut posuere sed, faucibus quis risus.
+I encountered [musicForProgramming();](https://musicforprogramming.net/latest/), and was impressed by their pixel-style visualization of music (look at the left side in the following gif).
 
-Phasellus id dolor lacinia, commodo nisl non, condimentum ante. Nam diam augue, tempor quis condimentum eget, luctus vitae felis. Aenean maximus ultrices massa ac viverra. Nullam tellus enim, tincidunt ac ligula eu, placerat vulputate justo. Vivamus non dui malesuada, mattis dolor vitae, aliquam ipsum. Sed dapibus nibh nisi, sit amet consectetur sapien scelerisque at.
+![Music for Programming visualization](/visualize-your-audio/musicforprogramming.gif)
 
+Right at that time I was struggling with the design of my podcast site, so it inspired me to visualize my podcast audio. After a short research, I found it's actually pretty easy to implement—the core implementation is the following 4 lines of code:
 
-## !!steps A Game of Thrones
-
-A Game of Thrones is the first book in the A Song of Ice and Fire series by George R.R. Martin. Set in a world where seasons last for years, it introduces a complex plot and a wide cast of characters, ranging from noble families vying for the Iron Throne to the supernatural threats in the North.
-
-```js ! george.js
-const houses = [
-  "Stark",
-  "Lannister",
-  "Baratheon",
-  "Targaryen",
-]
-
-const winner =
-  houses[
-    Math.floor(
-      Math.random() * houses.length,
-    )
-  ]
-
-console.log(`Iron Throne: ${winner}`)
+```js ! audio.js
+const audioContext = new AudioContext()
+const source = audioContext.createMediaElementSource(audioElement)
+const analyser = audioContext.createAnalyser()
+source.connect(analyser).connect(audioContext.destination)
 ```
 
-## !!steps A Clash of Kings
+But under the hood, there's a very interesting mental model based on the Web Audio API.
 
-A Clash of Kings, the second book in the series, continues the epic saga. The Seven Kingdoms are plunged into war, with kings rising and falling. Meanwhile, Daenerys Targaryen seeks to return to Westeros with her growing dragons.
+So in this post, I'd like to share with you my understanding of Web Audio API and help you understand each line of the code above.
 
-```js ! george.js
-const houses = [
-  "Stark",
-  "Lannister",
-  "Baratheon",
-  "Targaryen",
-]
+## !!steps It's All About the Graph
 
-const clash = () => {
-  const winner =
-    houses[
-      Math.floor(
-        Math.random() * houses.length,
-      )
-    ]
-  return `${winner} wins the battle!`
-}
+Building a correct mental model is always crucial for me. To build a correct mental model for Web Audio API, we have to understand two concepts: **audio node** and **audio context**.
 
-console.log(clash())
+Audio nodes are the fundamental elements in the web audio world. Audio always flows in a channel from the source node to destination nodes; along the way it may meet other nodes that affect your audio. For example, `GainNode` can change the volume; `AnalyserNode` can extract frequency and waveform data from audio. (Just like the flow of life—we encounter different people and are consciously or unconsciously affected by them.) All the audio nodes and linkages between them consist of an audio routing graph. Audio context prepares all the tools we need, with which you can take your pen and draw your audio routing graph.
+
+![Audio graph: source through nodes to destination](/visualize-your-audio/audio-graph-overview.png)
+
+```js ! audio.js
+// Audio flows: source → intermediate nodes → destination
+// We'll build this graph step by step
 ```
 
-## !!steps A Storm of Swords
+## !!steps Create the AudioContext
 
-The third book, A Storm of Swords, is known for its intense and shocking developments. Battles rage on, alliances shift, and characters face unexpected challenges and betrayals, making it one of the most thrilling books in the series.
+First, we need to create a context where we can say we've made the full preparation to operate the audio:
 
-```js ! george.js
-const houses = [
-  "Stark",
-  "Lannister",
-  "Baratheon",
-]
+![AudioContext creation](/visualize-your-audio/audio-context-creation.png)
 
-const reveal = () => {
-  const traitor =
-    houses[
-      Math.floor(
-        Math.random() * houses.length,
-      )
-    ]
-  return `${traitor} betrays the alliance!`
-}
-
-console.log(reveal())
+```js ! audio.js
+const audioContext = new AudioContext()
 ```
 
-## !!steps A Feast for Crows
+## !!steps Create the Source Node
 
-A Feast for Crows, the fourth book, explores the aftermath of the wars, with a focus on the characters in the southern regions of Westeros. It delves into the politics and power struggles in a kingdom weary of battle.
+Then, a source node is necessary. Here the `audioElement` is an instance of `HTMLAudioElement`, which has the source URL of the audio. No worries if you don't understand—we'll delve into it later.
 
-```js ! george.js
-const houses = [
-  "Martell",
-  "Lannister",
-  "Baratheon",
-  "Tyrell",
-]
+![Create media element source](/visualize-your-audio/create-media-element-source.png)
 
-const intrigue = () => {
-  const ally1 =
-    houses[
-      Math.floor(
-        Math.random() * houses.length,
-      )
-    ]
-  const ally2 =
-    houses[
-      Math.floor(
-        Math.random() * houses.length,
-      )
-    ]
-  return `${ally1} and ${ally2} form an alliance!`
-}
-
-console.log(intrigue())
+```js ! audio.js
+const audioContext = new AudioContext()
+const source = audioContext.createMediaElementSource(audioElement)
 ```
 
-## !!steps A Dance with Dragons
+## !!steps Add the Destination
 
-A Dance with Dragons, the fifth book, runs concurrently with A Feast for Crows and focuses on the characters in the North and across the Narrow Sea. The story advances with dragons, the Night’s Watch, and the lingering threat of winter.
+We need a destination node, which you don't need to create—instead, the audio context prepares it for you via `audioContext.destination`. Because audio always flows from a source node to destination nodes, we'll connect them next.
 
-```js ! george.js
-const houses = [
-  "Stark",
-  "Lannister",
-  "Baratheon",
-  "Targaryen",
-]
+![Source and audioContext.destination nodes](/visualize-your-audio/source-and-destination-nodes.png)
 
-const dragons = () => {
-  const dragon =
-    houses[
-      Math.floor(
-        Math.random() * houses.length,
-      )
-    ]
-  return `${dragon} has a dragon!`
-}
-
-console.log(dragons())
+```js ! audio.js
+const audioContext = new AudioContext()
+const source = audioContext.createMediaElementSource(audioElement)
+// audioContext.destination is built-in
 ```
 
-## !!steps The Winds of Winter
+## !!steps Connect Source to Destination
 
-The Winds of Winter, the anticipated sixth book, is expected to continue the intricate storylines and bring new twists and turns to the world of Westeros. Fans eagerly await its release.
+Let's connect source with destination:
 
-```js ! george.js
-const houses = [
-  "Stark",
-  "Lannister",
-  "Baratheon",
-  "Targaryen",
-  "Martell",
-  "Tyrell",
-  "Greyjoy",
-]
+![Source connected to destination](/visualize-your-audio/source-connect-destination.png)
 
-const winterIsComing = () => {
-  const isComing = Math.random() > 0.99
-  if (isComing) {
-    return "Winter is coming!"
-  } else {
-    return "Winter is not coming."
-  }
-}
+```js ! audio.js
+const audioContext = new AudioContext()
+const source = audioContext.createMediaElementSource(audioElement)
 
-console.log(winterIsComing())
+source.connect(audioContext.destination)
 ```
 
-## !!steps A Dream of Spring
+## !!steps Add the AnalyserNode
 
-A Dream of Spring is the proposed final book in the series, anticipated to conclude the epic saga. It remains one of the most awaited books in modern fantasy literature.
+But nothing happens if we do only that. To extract visualization data from the audio, we need to add an `AnalyserNode` between the source node and destination node:
 
-```js ! george.js
-const houses = [
-  "Stark",
-  "Lannister",
-  "Baratheon",
-  "Targaryen",
-  "Martell",
-  "Tyrell",
-  "Greyjoy",
-]
+![Analyser in the audio chain](/visualize-your-audio/analyser-in-audio-chain.png)
 
-const keepDreaming = () => {
-  return "Not gonna happen..."
-}
+```js ! audio.js
+const audioContext = new AudioContext()
+const source = audioContext.createMediaElementSource(audioElement)
+const analyser = audioContext.createAnalyser()
 
-console.log(keepDreaming())
+source.connect(analyser).connect(audioContext.destination)
+```
+
+## !!steps Get the Frequency Data
+
+Now that we have a good understanding of the Web Audio APIs, it's time to get the data we need for visualization.
+
+Think about the animation first—it's just stacked frames. We need data for each frame; then the data changes for the next frame. For a frame, we seem to need an array, right? The size of the array is the x-axis and every element is probably the height—how high the symbol can reach.
+
+`analyser.getByteFrequencyData()` is exactly what we need. It changes as the audio plays, and every time we call it, it gives us a snapshot of the frequency sample at that point. Just as we imagined, it's an array—perfect! The index of the array is frequency; the value of each element indicates how much power there is for that frequency.
+
+> Why frequency? There's another method called `getByteTimeDomainData`—why don't we need that? I'm not going to jump into that rabbithole, because there's an amazing [viz post](https://pudding.cool/2018/02/waveforms/) about it. Go and read it!
+
+```js ! audio.js
+const audioContext = new AudioContext()
+const source = audioContext.createMediaElementSource(audioElement)
+const analyser = audioContext.createAnalyser()
+source.connect(analyser).connect(audioContext.destination)
+
+// Get frequency data for visualization
+const data = new Uint8Array(analyser.frequencyBinCount)
+analyser.getByteFrequencyData(data)
+```
+
+## !!steps Let's Make the Music Dance
+
+In this part, we're going to animate with React and Tailwind. First, we show all the symbols, then dim them at once, then in each column light the one with the given frequency—that's exactly a frame we want. Animate it with changing frequency.
+
+You may notice that the closer to 0, the higher and denser the frequency is. This is not ideal for visual reasons—we'll fix that next.
+
+```jsx ! audio.js
+// HTML structure for frequency bars
+// Show all symbols → dim all → light by frequency
+```
+
+## !!steps The Logarithmic World
+
+Looking back at the x-axis, it is linear! That's the point—[the world is logarithmic](https://youtu.be/JdhRD4TKh48?si=NNQM2JlzDFBsKrS0), and so is sound. To let us humans perceive pitch better, we need an even distribution. The algorithm maps the data onto a logarithmic x-axis.
+
+Since it's not the focus of this post, I'll use a library to solve the problem. If you're interested in the detailed implementation, let me know in the comments and I may cover it in another post.
+
+```js ! audio.js
+// Run: npm install audiomotion-analyzer
+// Then replace our analyser with the library for logarithmic frequency display
 ```
 
 ## !outro
 
-Quisque id pretium neque. Vestibulum metus orci, pretium nec varius convallis, viverra quis urna. Praesent luctus, purus nec tempus placerat, justo lorem auctor ligula, ut condimentum tellus velit ac erat. Fusce ut dictum libero. Vestibulum ipsum mauris, cursus sed tortor at, rhoncus viverra ipsum. Donec odio dolor, varius quis congue posuere, tempor et justo. Praesent at scelerisque metus. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Sed malesuada leo vitae mauris eleifend condimentum. Proin auctor, ex ac aliquam gravida, felis felis lacinia libero, efficitur aliquet nulla neque sed elit. Vestibulum congue aliquam risus, sit amet rutrum magna euismod ac. Integer posuere neque nec ex sollicitudin rhoncus.
+We've covered the Web Audio API mental model (audio graph, nodes, and context), built the audio chain step by step, and touched on getting frequency data for visualization. The rest—React animation and logarithmic scaling—is polish. Happy coding!
