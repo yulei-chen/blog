@@ -1,35 +1,29 @@
 ## !intro Visualize Your Audio
 
-I encountered [musicForProgramming();](https://musicforprogramming.net/latest/), and was impressed by their pixel-style visualization of music (look at the left side in the following gif).
+I was impressed by the terminal-style music visualization of [musicForProgramming](https://musicforprogramming.net/latest/) and decided to make my own.
 
-![Music for Programming visualization](/visualize-your-audio/musicforprogramming.gif)
+<video src="/visualize-your-audio/musicforprogramming.mp4" autoPlay loop muted playsInline />
 
-Right at that time I was struggling with the design of my podcast site, so it inspired me to visualize my podcast audio. After a short research, I found it's actually pretty easy to implement—the core implementation is the following 4 lines of code:
+After a short research, I found it's actually pretty easy to implement, and the core implementation is the following 4 lines of code:
 
-```js ! audio.js
+```js
 const audioContext = new AudioContext()
 const source = audioContext.createMediaElementSource(audioElement)
 const analyser = audioContext.createAnalyser()
 source.connect(analyser).connect(audioContext.destination)
 ```
 
-But under the hood, there's a very interesting mental model based on the Web Audio API.
+It uses Web Audio API. In this post, I'd like to share with you a very interesting mental model of Web Audio API, help you understand each line of the code above, and visualize the audio step by step.
 
-So in this post, I'd like to share with you my understanding of Web Audio API and help you understand each line of the code above.
+## It's All About the Graph
 
-## !!steps It's All About the Graph
+To build a correct mental model for Web Audio API, we have to understand two concepts: **audio node** and **audio context**.
 
-Building a correct mental model is always crucial for me. To build a correct mental model for Web Audio API, we have to understand two concepts: **audio node** and **audio context**.
+Audio nodes are the fundamental elements in the web audio world. **Audio always flows in a channel from the source node to destination nodes; along the way it may meet other nodes that affect your audio.** For example, `GainNode` can change the volume; `AnalyserNode` can extract frequency and waveform data from audio. (Just like the flow of life, we encounter different people and are consciously or unconsciously affected by them.) All the audio nodes and linkages between them consist of an **audio routing graph**. Audio context prepares all the tools we need, with which you can take your pen and draw your audio routing graph.
 
-Audio nodes are the fundamental elements in the web audio world. Audio always flows in a channel from the source node to destination nodes; along the way it may meet other nodes that affect your audio. For example, `GainNode` can change the volume; `AnalyserNode` can extract frequency and waveform data from audio. (Just like the flow of life—we encounter different people and are consciously or unconsciously affected by them.) All the audio nodes and linkages between them consist of an audio routing graph. Audio context prepares all the tools we need, with which you can take your pen and draw your audio routing graph.
+<img style={{ margin: "30px auto 30px auto" }} src="/visualize-your-audio/audio-graph-overview.png" width={650} alt="Audio graph: source through nodes to destination" />
 
-![Audio graph: source through nodes to destination](/visualize-your-audio/audio-graph-overview.png)
-
-```js ! audio.js
-// Audio flows: source → intermediate nodes → destination
-// We'll build this graph step by step
-```
-
+{/* todo: the style of scollycoding | swap text and code | put image below the code */}
 ## !!steps Create the AudioContext
 
 First, we need to create a context where we can say we've made the full preparation to operate the audio:
