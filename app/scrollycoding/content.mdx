@@ -2,7 +2,7 @@
 
 I was impressed by the terminal-style music visualization of [musicForProgramming](https://musicforprogramming.net/latest/) and decided to make my own.
 
-<video src="/visualize-your-audio/musicforprogramming.mp4" autoPlay loop muted playsInline />
+<video src="/visualize-your-audio/musicforprogramming.mp4" autoPlay muted playsInline />
 
 After a short research, I found it's actually pretty easy to implement, and the core implementation is the following 4 lines of code:
 
@@ -23,12 +23,14 @@ Audio nodes are the fundamental elements in the web audio world. **Audio always 
 
 <img style={{ margin: "30px auto 30px auto" }} src="/visualize-your-audio/audio-graph-overview.png" width={650} alt="Audio graph: source through nodes to destination" />
 
+Let's start with the code.
+
 {/* todo: the style of scollycoding | swap text and code | put image below the code */}
 ## !!steps Create the AudioContext
 
 First, we need to create a context where we can say we've made the full preparation to operate the audio:
 
-![AudioContext creation](/visualize-your-audio/audio-context-creation.png)
+![!graph AudioContext creation](/visualize-your-audio/audio-context-creation.png)
 
 ```js ! audio.js
 const audioContext = new AudioContext()
@@ -38,7 +40,7 @@ const audioContext = new AudioContext()
 
 Then, a source node is necessary. Here the `audioElement` is an instance of `HTMLAudioElement`, which has the source URL of the audio. No worries if you don't understand—we'll delve into it later.
 
-![Create media element source](/visualize-your-audio/create-media-element-source.png)
+![!graph Create media element source](/visualize-your-audio/create-media-element-source.png)
 
 ```js ! audio.js
 const audioContext = new AudioContext()
@@ -49,7 +51,7 @@ const source = audioContext.createMediaElementSource(audioElement)
 
 We need a destination node, which you don't need to create—instead, the audio context prepares it for you via `audioContext.destination`. Because audio always flows from a source node to destination nodes, we'll connect them next.
 
-![Source and audioContext.destination nodes](/visualize-your-audio/source-and-destination-nodes.png)
+![!graph Source and audioContext.destination nodes](/visualize-your-audio/source-and-destination-nodes.png)
 
 ```js ! audio.js
 const audioContext = new AudioContext()
@@ -61,7 +63,7 @@ const source = audioContext.createMediaElementSource(audioElement)
 
 Let's connect source with destination:
 
-![Source connected to destination](/visualize-your-audio/source-connect-destination.png)
+![!graph Source connected to destination](/visualize-your-audio/source-connect-destination.png)
 
 ```js ! audio.js
 const audioContext = new AudioContext()
@@ -74,7 +76,7 @@ source.connect(audioContext.destination)
 
 But nothing happens if we do only that. To extract visualization data from the audio, we need to add an `AnalyserNode` between the source node and destination node:
 
-![Analyser in the audio chain](/visualize-your-audio/analyser-in-audio-chain.png)
+![!graph Analyser in the audio chain](/visualize-your-audio/analyser-in-audio-chain.png)
 
 ```js ! audio.js
 const audioContext = new AudioContext()
