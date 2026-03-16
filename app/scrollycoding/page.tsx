@@ -21,11 +21,11 @@ export default function Page() {
   const { intro, steps, outro } = parseRoot(Content, Schema)
 console.log(parseRoot(Content, Schema))
   return (
-    <main>
+    <main className="prose-grid prose prose-invert max-w-none">
       <Link href="/">Back</Link>
       <h1 className="mt-8">{intro.title}</h1>
       {intro.children}
-      <SelectionProvider className="flex gap-3 mt-10">
+      <SelectionProvider className="flex gap-3 mt-10 full-bleed">
         <div className="w-[40vw] max-w-xl">
           <div className="top-[30vh] sticky overflow-auto">
             <Selection

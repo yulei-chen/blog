@@ -1,3 +1,12 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+  .prose-grid {
+    @apply grid grid-cols-[1fr_65ch_1fr] *:col-start-2 *:col-end-3;
+  }
+  .full-bleed {
+    @apply col-start-1 col-end-4;
+  }
+}
